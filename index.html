@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escape-Game: Geld im Griff statt Schuldenfalle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0F2130;--navy2:#1B3549;--grau:#56676F;--akzent:#C1652B;--akzent-hell:#F6E6DB;--linie:#D5DBDE;--hg:#F3F5F6;--gruen:#2F7D5B;--gruen-hell:#E1F1E9;--rot:#B2342B;--rot-hell:#F7E1DF;--gold:#D9A441}
+*{box-sizing:border-box}
+body{margin:0;font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--navy);background:var(--hg);line-height:1.5}
+h1,h2,h3,h4{font-family:Archivo,system-ui,sans-serif;line-height:1.2;margin:0 0 .5em}
+h4{font-size:1rem;margin-top:.8em}
+.wrap{max-width:1000px;margin:0 auto;padding:0 18px}
+header{background:var(--navy);color:#fff;padding:14px 0;position:sticky;top:0;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.hbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-family:Archivo;font-weight:800;font-size:1.05rem}
+.logo span{color:var(--gold)}
+.hstat{margin-left:auto;display:flex;gap:16px;align-items:center;font-size:.92rem}
+.uhr{font-family:"IBM Plex Mono",monospace;font-size:1.15rem;background:var(--navy2);padding:4px 10px;border-radius:6px}
+.schluessel{display:flex;gap:4px}
+.schluessel b{display:inline-grid;place-items:center;width:26px;height:30px;border-radius:5px;background:var(--navy2);color:#6F8597;font-family:"IBM Plex Mono",monospace}
+.schluessel b.ok{background:var(--gold);color:var(--navy)}
+main{padding:22px 0 60px}
+.karte{background:#fff;border:1px solid var(--linie);border-radius:12px;padding:20px;margin-bottom:16px}
+.btn{background:var(--navy);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--navy2)}
+.btn.akz{background:var(--akzent)}
+.btn.sek{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.hinweis{color:var(--grau);font-size:.92rem}
+.raeume{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.raum-kachel{border:2px solid var(--linie);border-radius:12px;padding:12px;background:#fff;text-align:left;font:inherit;cursor:pointer;position:relative;min-height:96px}
+.raum-kachel .nr{font-family:Archivo;font-weight:800;color:var(--akzent)}
+.raum-kachel.gesperrt{cursor:not-allowed;background:#E9EDEF;color:#8A979E}
+.raum-kachel.geloest{border-color:var(--gruen);background:var(--gruen-hell)}
+.raum-kachel.aktiv{border-color:var(--akzent)}
+.raum-kachel .status{position:absolute;right:10px;top:8px;font-size:1.1rem}
+.story{background:linear-gradient(135deg,#0F2130,#243F55);color:#EAF0F3;border-radius:14px;padding:26px}
+.story h1{color:#fff;font-size:clamp(1.6rem,4vw,2.3rem)}
+.story .gold{color:var(--gold)}
+.aufgabe{border-top:1px dashed var(--linie);padding-top:14px;margin-top:14px}
+.aufgabe.geloest{opacity:.85}
+.aufgabe h4 .ok{color:var(--gruen);font-size:.9rem;margin-left:8px}
+.sortier{display:grid;gap:6px}
+.sort-zeile{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--linie);border-radius:8px;background:#fff;flex-wrap:wrap}
+.sort-zeile.r{border-color:var(--gruen);background:var(--gruen-hell)}
+.sort-zeile.f{border-color:var(--rot);background:var(--rot-hell)}
+.sort-btns{display:flex;gap:4px;flex-wrap:wrap}
+.sort-btns button{border:1px solid var(--navy);background:#fff;border-radius:999px;padding:5px 11px;font:inherit;font-size:.85rem;cursor:pointer}
+.sort-btns button[aria-pressed=true]{background:var(--navy);color:#fff}
+.mc label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--linie);border-radius:8px;margin:5px 0;cursor:pointer;background:#fff}
+.mc label.r{border-color:var(--gruen);background:var(--gruen-hell)}
+.mc label.f{border-color:var(--rot);background:var(--rot-hell)}
+.num-zeile{display:flex;gap:10px;align-items:center;margin:6px 0;flex-wrap:wrap}
+.num-zeile input{width:120px;padding:8px;border:1px solid var(--linie);border-radius:6px;font:inherit;text-align:right}
+.num-zeile input.r{border-color:var(--gruen);background:var(--gruen-hell)}
+.num-zeile input.f{border-color:var(--rot);background:var(--rot-hell)}
+.feedback{margin-top:8px;padding:10px 12px;border-radius:8px;display:none}
+.feedback.r{display:block;background:var(--gruen-hell)}
+.feedback.f{display:block;background:var(--rot-hell)}
+.material{background:#FFF9F1;border:1px solid #EAD3BA;border-radius:10px;padding:14px;margin:10px 0}
+.material h4{margin-top:0}
+.budget{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.budget div{background:#fff;border:1px solid var(--linie);border-radius:8px;padding:8px 10px;font-size:.92rem}
+.budget b{display:block;font-family:"IBM Plex Mono",monospace}
+.auszug{font-family:"IBM Plex Mono",monospace;font-size:.9rem;background:#fff;border:1px solid var(--linie);border-radius:8px;padding:10px 12px}
+.auszug div{display:flex;justify-content:space-between}
+.auszug .minus{color:var(--rot)}
+.stationen{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.station{background:#fff;border:1px solid var(--linie);border-left:5px solid var(--akzent);border-radius:8px;padding:10px 12px;font-size:.93rem}
+.station b{font-family:Archivo}
+.hilfen{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.hilfe-text{background:#EEF3F6;border-left:4px solid var(--navy);border-radius:6px;padding:8px 12px;margin-top:8px}
+.buchstabe-gross{font-family:"IBM Plex Mono",monospace;font-size:3rem;font-weight:700;color:var(--navy);background:var(--gold);display:inline-grid;place-items:center;width:80px;height:90px;border-radius:12px;margin:8px 0}
+.tresor{display:flex;gap:8px;justify-content:center;margin:14px 0}
+.tresor input{width:52px;height:62px;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:1.8rem;text-transform:uppercase;border:2px solid var(--navy);border-radius:8px}
+.zert{border:3px double var(--gold);border-radius:14px;padding:24px;text-align:center;background:#FFFDF7}
+.glossar dt{font-weight:700;margin-top:8px}
+.glossar dd{margin:0 0 4px 0}
+dialog{border:0;border-radius:12px;max-width:640px;width:92%;padding:22px}
+dialog::backdrop{background:rgba(15,33,48,.5)}
+textarea{width:100%;min-height:80px;padding:8px;border:1px solid var(--linie);border-radius:8px;font:inherit}
+input[type=text]{padding:8px;border:1px solid var(--linie);border-radius:6px;font:inherit}
+footer{font-size:.8rem;color:var(--grau);padding:10px 0 40px}
+.versteckt{display:none!important}
+@media (max-width:640px){.hstat{margin-left:0;width:100%;justify-content:space-between}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap hbar">
+    <div class="logo">🔐 Geld im Griff <span>statt Schuldenfalle</span></div>
+    <div class="hstat">
+      <span title="Gesammelte Code-Buchstaben">Code: <span class="schluessel" id="codeAnzeige"></span></span>
+      <span class="uhr" id="uhr" title="Verbleibende Zeit">40:00</span>
+      <button class="btn sek" id="glossarBtn" style="padding:6px 10px">📘 Glossar</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- START -->
+<section id="startScreen">
+  <div class="story">
+    <div class="hinweis" style="color:#AFC0CA">Escape-Game · Wirtschaft und Recht 10 · Umgang mit Geld</div>
+    <h1>Die Akte im Tresor</h1>
+    <p>Montagmorgen in der Schuldnerberatung. Um 10 Uhr kommt <b>Lukas, 23</b>, zu seinem ersten Termin. Er hat einen Stapel ungeöffneter Briefe dabei und sagt: <i>„Alleine komme ich da nicht mehr raus.“</i></p>
+    <p>Ihr seid heute das Beratungsteam. Die Akte mit Lukas' Neustart-Plan liegt im Tresor. Der Code hat <b class="gold">sechs Buchstaben</b>, und jede Station verrät euch einen davon, wenn ihr alle Aufgaben richtig löst.</p>
+    <p>Ihr habt <b class="gold">40 Minuten</b>. Jeder Tipp kostet eine Minute.</p>
+  </div>
+  <div class="karte" style="margin-top:16px">
+    <h3>So spielt ihr</h3>
+    <ol>
+      <li>Öffnet die Stationen der Reihe nach. Die nächste wird frei, wenn ihr die vorige gelöst habt.</li>
+      <li>Lest zuerst das Material (oranger Kasten), dann löst ihr die Aufgaben. Mit „Prüfen“ seht ihr sofort, was stimmt.</li>
+      <li>Kommt ihr nicht weiter, holt euch gestufte Tipps: 💡 Denkanstoß, 🧭 Strategie, 🔑 Teillösung.</li>
+      <li>Unbekannte Begriffe stehen im 📘 Glossar oben rechts.</li>
+      <li>Mit allen sechs Buchstaben öffnet ihr am Ende den Tresor.</li>
+    </ol>
+    <p><label>Teamname: <input type="text" id="teamName" maxlength="30" placeholder="z. B. Team Notgroschen"></label></p>
+    <p class="hinweis">Euer Fortschritt bleibt in diesem Browser gespeichert, solange ihr den Tab nicht leert.</p>
+    <button class="btn akz" id="losBtn">Escape-Game starten</button>
+    <button class="btn sek" id="resetBtn">Neu beginnen</button>
+  </div>
+</section>
+
+<!-- ÜBERSICHT + RAUM -->
+<section id="spielScreen" class="versteckt">
+  <div class="raeume" id="raumKacheln"></div>
+  <div id="raumInhalt"></div>
+</section>
+
+<!-- TRESOR -->
+<section id="tresorScreen" class="versteckt">
+  <div class="karte" style="text-align:center">
+    <h2>🔐 Der Tresor</h2>
+    <p>Gebt die sechs Buchstaben in der Reihenfolge der Stationen ein.</p>
+    <div class="tresor" id="tresorFelder"></div>
+    <button class="btn akz" id="tresorBtn">Tresor öffnen</button>
+    <div class="feedback" id="tresorFb"></div>
+  </div>
+</section>
+
+<!-- FINALE -->
+<section id="finaleScreen" class="versteckt">
+  <div class="story">
+    <h1>Der Tresor ist offen!</h1>
+    <p>In der Akte liegt Lukas' Kontoauszug, daneben ein leeres Blatt: <b class="gold">„Neustart-Plan“</b>. Jetzt kommt die eigentliche Beratung.</p>
+  </div>
+  <div class="karte" style="margin-top:16px">
+    <h3>Lukas' Neustart-Plan: Wählt die vier wichtigsten ersten Schritte</h3>
+    <div class="mc" id="planListe"></div>
+    <button class="btn" id="planBtn">Plan prüfen</button>
+    <div class="feedback" id="planFb"></div>
+  </div>
+  <div class="karte">
+    <h3>Challenge: Eure Botschaft gegen die „Später-zahlen-Falle“</h3>
+    <p>Ihr wollt andere Jugendliche auf Instagram oder TikTok warnen. Formuliert einen <b>Hook</b> (erster Satz, der zum Weiterschauen bringt) und eine <b>Kernbotschaft</b>. Ausarbeiten könnt ihr den Post oder das Video später als Hausaufgabe.</p>
+    <p><label>Hook:<br><input type="text" id="hook" style="width:100%" placeholder="„Ich hab mir nur Sneaker gegönnt. Drei Monate später …“"></label></p>
+    <p><label>Kernbotschaft:<br><textarea id="botschaft" placeholder="Was sollen eure Follower am Ende wissen oder tun?"></textarea></label></p>
+  </div>
+  <div class="zert" id="zertifikat"></div>
+</section>
+
+</main>
+
+<dialog id="glossar">
+  <h3>📘 Glossar</h3>
+  <dl class="glossar">
+    <dt>Schulden</dt><dd>Geld, das man anderen zurückzahlen muss, etwa geliehenes Geld oder offene Rechnungen.</dd>
+    <dt>Gläubiger / Schuldner</dt><dd>Gläubiger: wer Geld bekommt (z. B. Bank, Händler, Freundin). Schuldner: wer zahlen muss.</dd>
+    <dt>Verschuldung</dt><dd>Man schuldet Geld, kann es aber noch planmäßig zurückzahlen.</dd>
+    <dt>Überschuldung</dt><dd>Das Einkommen reicht dauerhaft nicht mehr, um Rechnungen, Raten, Zinsen und Gebühren zu bezahlen.</dd>
+    <dt>Investitionsschulden</dt><dd>Kredit für etwas mit längerfristigem Nutzen: Es sichert Einkommen, verbessert Berufschancen oder behält seinen Wert.</dd>
+    <dt>Konsumschulden</dt><dd>Kredit für Dinge, die schnell verbraucht sind oder an Wert verlieren und vor allem einen kurzfristigen Wunsch erfüllen.</dd>
+    <dt>Ratenkauf</dt><dd>Der Preis wird in mehreren Teilbeträgen bezahlt. Häufig kommen Zinsen oder Gebühren dazu.</dd>
+    <dt>Buy Now, Pay Later (BNPL)</dt><dd>„Jetzt kaufen, später zahlen“: Bezahlung erst nach Wochen oder in Raten. Seit 20.11.2026 rechtlich ein Verbraucherkredit, mit Prüfung der Kreditwürdigkeit.</dd>
+    <dt>Dispokredit (Dispo)</dt><dd>Kreditrahmen auf dem Girokonto. Ist das Konto im Minus, nutzt man ihn automatisch, und es fallen hohe Zinsen an (2026 im Schnitt rund 11 % pro Jahr).</dd>
+    <dt>Mahnung / Mahngebühr</dt><dd>Aufforderung, eine offene Rechnung zu bezahlen. Für Mahnungen kann zusätzlich Geld verlangt werden.</dd>
+    <dt>Widerrufsrecht</dt><dd>Online-Käufe können meist innerhalb von 14 Tagen ohne Begründung rückgängig gemacht werden.</dd>
+    <dt>Schuldnerberatung</dt><dd>Beratungsstelle, die Menschen mit Schulden hilft, z. B. bei Wohlfahrtsverbänden oder Verbraucherzentralen. Oft kostenlos.</dd>
+    <dt>Privatinsolvenz</dt><dd>Gerichtliches Verfahren für überschuldete Privatpersonen: Über mehrere Jahre wird der pfändbare Teil des Einkommens abgegeben, danach ist ein schuldenfreier Neustart möglich.</dd>
+    <dt>Brutto / Netto</dt><dd>Brutto: Lohn vor Abzug von Steuern und Sozialabgaben. Netto: was auf dem Konto ankommt.</dd>
+    <dt>Defizit</dt><dd>Die Ausgaben sind höher als die Einnahmen.</dd>
+  </dl>
+  <button class="btn" onclick="document.getElementById('glossar').close()">Schließen</button>
+</dialog>
+
+<footer class="wrap">
+  Inhaltliche Grundlage: Sparkassen-Schulservice, Unterrichtseinheit „Geld im Griff statt Konto im Minus“ (DSGV, Stand 07/2026; Fallbeispiele Hannah, Jan, Lukas, Interview mit einem Schuldnerberater). Für die Jahrgangsstufe 10 neu aufbereitet und erweitert. Statistik zu Online-Shop-Schulden: Statistisches Bundesamt (laut Material). Dispozins: Stiftung Warentest, Mai 2026. BNPL-Regel: Verbraucherkreditrichtlinie, seit 20.11.2026. Alle Personen sind erfunden. Lernangebot ohne Gewähr.
+</footer>
+
+<script>
+const $=s=>document.querySelector(s);
+const speicher={get(k){try{return JSON.parse(localStorage.getItem("escGeld_"+k));}catch(e){return null;}},set(k,v){try{localStorage.setItem("escGeld_"+k,JSON.stringify(v));}catch(e){}},weg(){try{Object.keys(localStorage).filter(k=>k.startsWith("escGeld_")).forEach(k=>localStorage.removeItem(k));}catch(e){}}};
+const euro=(x,d=0)=>x.toLocaleString("de-DE",{minimumFractionDigits:d,maximumFractionDigits:d})+" €";
+const CODE="BUDGET";
+
+/* ======================== STATIONEN ======================== */
+const RAEUME=[
+{ titel:"Hannahs Konto", kurz:"Monatsbudget", buchstabe:"B",
+  material:`<h4>📄 Material: Hannahs Monat</h4>
+  <p>Hannah ist 17 und im ersten Ausbildungsjahr als Kauffrau für IT-System-Management. Sie wohnt schon allein. So sieht ihr Monat aus (Beträge in Euro, Ausbildungsvergütung netto):</p>
+  <div class="budget">
+   <div>Ausbildungsvergütung<b>1.000</b></div><div>Kindergeld (2026)<b>259</b></div><div>Nebenjob Babysitting<b>150</b></div>
+   <div>Miete + Nebenkosten<b>750</b></div><div>Strom + Heizung<b>100</b></div><div>Handy + Internet<b>60</b></div>
+   <div>Lebensmittel<b>250</b></div><div>Drogerie<b>40</b></div><div>Mobilität<b>60</b></div>
+   <div>Ausgehen + Freizeit<b>100</b></div><div>Sprachkurs<b>30</b></div><div>Abos + Streaming<b>40</b></div><div>Kleidung + Shopping<b>70</b></div>
+  </div>`,
+  aufgaben:[
+   {typ:"sort", frage:"Sortiert: Was ist eine Einnahme, was eine Ausgabe?", kat:["Einnahme","Ausgabe"],
+    items:[["Ausbildungsvergütung 1.000 €",0],["Kindergeld 259 €",0],["Babysitting 150 €",0],["Miete + Nebenkosten 750 €",1],["Strom + Heizung 100 €",1],["Handy + Internet 60 €",1],["Lebensmittel 250 €",1],["Drogerie 40 €",1],["Mobilität 60 €",1],["Ausgehen + Freizeit 100 €",1],["Sprachkurs 30 €",1],["Abos + Streaming 40 €",1],["Kleidung + Shopping 70 €",1]],
+    erkl:"Drei Einnahmen, zehn Ausgaben. Das Kindergeld zählt mit, solange es an Hannah weitergegeben wird."},
+   {typ:"num", frage:"Berechnet die Bilanz.", felder:[["Summe Einnahmen",1409,0],["Summe Ausgaben",1500,0],["Monatlicher Saldo (Einnahmen − Ausgaben)",-91,0]], einheit:"€",
+    erkl:"1.409 € − 1.500 € = −91 €. Hannah gibt jeden Monat 91 € mehr aus, als sie einnimmt: ein Defizit."},
+   {typ:"num", frage:"Hannah ändert nichts. Wie hoch ist ihr Minus nach einem Jahr (ohne Zinsen)?", felder:[["Minus nach 12 Monaten",-1092,0]], einheit:"€", betrag:true,
+    erkl:"12 × 91 € = 1.092 €. Mit Dispozinsen und Mahngebühren wird es sogar noch mehr."},
+   {typ:"mc", multi:true, frage:"Was passiert langfristig, wenn Hannah nichts ändert? (mehrere richtig)",
+    opts:[["Ihr Konto rutscht jeden Monat tiefer ins Minus.",1],["Rechnungen bleiben offen, es kommen Mahngebühren dazu.",1],["Die Bank gleicht das Minus nach einem Jahr kostenlos aus.",0],["Sie macht Schulden, für die Zinsen anfallen.",1],["Kleine Minusbeträge verfallen automatisch.",0]],
+    erkl:"Ein dauerhaftes Defizit führt fast immer in die Schulden. Wenn Hannah ihr Budget nicht verändert, wird aus Verschuldung irgendwann Überschuldung."}
+  ],
+  hilfen:["Eine Einnahme ist Geld, das auf Hannahs Konto ankommt. Eine Ausgabe ist Geld, das abgeht.","Rechnet zuerst die drei Einnahmen zusammen, dann alle zehn Ausgaben. Saldo = Einnahmen − Ausgaben.","Einnahmen: 1.000 + 259 + 150. Die Ausgaben ergeben genau 1.500 €. Das Minus pro Monat ist zweistellig."]},
+
+{ titel:"Schulden-Check", kurz:"Verschuldet oder überschuldet?", buchstabe:"U",
+  material:`<h4>📄 Material: Aus einem Gespräch mit einem Schuldnerberater</h4>
+  <p><b>Was sind Schulden?</b> Geld, das man anderen zurückzahlen muss: Freunden, einer Bank oder einem Unternehmen. Schulden entstehen, wenn man etwas kauft und sich dafür Geld leiht.</p>
+  <p><b>Ist das schon ein Thema bei Jungen?</b> Ja. In die Beratung kommen viele junge Menschen mit offenen Online-Bestellungen, oft über „Jetzt kaufen, später zahlen“-Dienste, dazu Abos und Handyraten. Jeder Betrag wirkt klein, aber man verliert schnell den Überblick. Laut der Trendstudie „Jugend in Deutschland 2025“ hat etwa jede fünfte Person zwischen 14 und 29 Jahren Schulden.</p>
+  <p><b>Verschuldet oder überschuldet?</b> Wer verschuldet ist, schuldet Geld, kann es aber noch zurückzahlen. Überschuldet ist man, wenn das Einkommen dauerhaft nicht mehr reicht, um Rechnungen, Raten, Zinsen und Gebühren zu bezahlen.</p>
+  <p class="hinweis">Nach: Sparkassen-Schulservice, „Geld im Griff statt Konto im Minus“, Arbeitsblatt 1 (sinngemäß gekürzt)</p>`,
+  aufgaben:[
+   {typ:"mc", multi:true, frage:"Welche Aussagen stimmen? (mehrere richtig)",
+    opts:[["Schulden müssen zurückgezahlt werden.",1],["Schulden gibt es nur bei Banken.",0],["Auch bei Freundinnen und Freunden können Schulden entstehen.",1],["Schulden lösen sich nach einem Jahr von selbst auf.",0],["Auch offene Online-Bestellungen und Abo-Rechnungen sind Schulden.",1]],
+    erkl:"Schulden sind jede Zahlungsverpflichtung gegenüber anderen, egal ob Bank, Händler oder Freund. Sie verjähren nicht einfach nach einem Jahr."},
+   {typ:"sort", frage:"Verschuldet oder schon überschuldet?", kat:["verschuldet","überschuldet"],
+    items:[["Mia zahlt ihr Handy in Raten ab. Die Rate ist jeden Monat locker gedeckt.",0],["Seit Monaten kann Lukas seine Raten nicht zahlen, sein Dispo ist ausgeschöpft.",1],["Ali hat sich 50 € von seiner Schwester geliehen und zahlt sie nächste Woche zurück.",0],["Nach dem Jobverlust reicht das Geld dauerhaft weder für die Miete noch für die Kreditraten.",1],["Sara hat einen Studienkredit. Die Rückzahlung beginnt nach dem Abschluss, ihr Einstiegsgehalt reicht dafür.",0]],
+    erkl:"Entscheidend ist nicht die Höhe der Schulden, sondern ob man sie dauerhaft aus dem Einkommen zurückzahlen kann."},
+   {typ:"wahl", frage:"Schätzt: Wie viel Prozent der Altersgruppe haben Schulden bei Online-Shops oder im Versandhandel? (gemeint sind Menschen in der Schuldnerberatung)",
+    felder:[["20- bis 24-Jährige",["19 %","26 %","40 %","56 %"],2],["45- bis 54-Jährige",["19 %","27 %","40 %","56 %"],1]],
+    erkl:"40 % der 20- bis 24-Jährigen, aber nur 27 % der 45- bis 54-Jährigen (Statistisches Bundesamt, Überschuldungsstatistik). Jüngere kaufen häufiger spontan online und nutzen öfter „später zahlen“."}
+  ],
+  hilfen:["Lest im Material den letzten Absatz zu verschuldet und überschuldet noch einmal genau.","Fragt bei jedem Fall: Kann die Person ihre Schulden aus ihrem Einkommen zurückzahlen, ja oder nein?","Drei Fälle sind „nur“ verschuldet. Bei der Statistik liegen die Jüngeren deutlich höher als die Älteren."]},
+
+{ titel:"Konsum oder Investition?", kurz:"Sinnvolle Kredite erkennen", buchstabe:"D",
+  material:`<h4>📄 Material: Fünf Jahre später</h4>
+  <p>Hannah, inzwischen 22, hat ihre Ausbildung abgeschlossen und arbeitet fest bei einem Softwareunternehmen. Sie überlegt, einen Kredit aufzunehmen.</p>
+  <p><b>Investitionsschulden</b>: Kredit für Anschaffungen, die langfristig Einkommen sichern, die beruflichen Chancen verbessern oder einen bleibenden wirtschaftlichen Nutzen haben.<br>
+  <b>Konsumschulden</b>: Kredit für Dinge, die vor allem kurzfristige Wünsche erfüllen, schnell verbraucht sind oder an Wert verlieren.</p>
+  <p><b>Fall Jan:</b> Jan arbeitet seit einem Jahr im Schichtdienst bei einem Autozulieferer. Die Frühschicht beginnt um 5:30 Uhr, Busse fahren um diese Zeit kaum. Er möchte 9.500 € Kredit für einen gebrauchten Kleinwagen aufnehmen.</p>
+  <p class="hinweis">Nach: Sparkassen-Schulservice, Projektionsvorlage 2</p>`,
+  aufgaben:[
+   {typ:"sort", frage:"Welches Merkmal passt eher zu Investitions-, welches eher zu Konsumschulden?", kat:["Investition","Konsum"],
+    items:[["hilft für die Zukunft",0],["kann an Wert gewinnen",0],["hat einen bestimmten Zweck",0],["verliert schnell an Wert",1],["erfüllt nur kurzfristig einen Wunsch",1],["kostet später noch weiter Geld",1]],
+    erkl:"Eine Investition bringt später einen Nutzen, Konsum vor allem jetzt."},
+   {typ:"sort", frage:"Ordnet Hannahs Kreditziele ein.", kat:["eindeutig Investition","eher Konsum / diskutierbar"],
+    items:[["Weiterbildung",0],["Wohneigentum",0],["Gründung eines eigenen Unternehmens",0],["neue Designer-Kleidung",1],["hochwertige Gaming-Station",1],["komplette Surf-Ausrüstung",1],["große Urlaubsreise",1],["neues Auto",1],["neue Wohnungseinrichtung",1]],
+    erkl:"Nur Weiterbildung, Wohneigentum und Unternehmensgründung sind klare Investitionen. Bei Auto, Einrichtung oder Reise kommt es auf den Zweck an: Ein Auto für den Arbeitsweg kann eine Investition sein, eine Gaming-Station für den Job ebenso."},
+   {typ:"mc", multi:true, frage:"Jans Autokredit ist eher eine Investition. Welche Gründe sprechen dafür? (mehrere richtig)",
+    opts:[["Ohne Auto kommt er kaum pünktlich zur Frühschicht.",1],["Das Auto sichert sein Einkommen.",1],["Er kauft einen Gebrauchtwagen statt eines teuren Neuwagens.",1],["Autos gewinnen grundsätzlich an Wert.",0],["Kredite sind immer günstiger als Sparen.",0]],
+    erkl:"Nicht der Gegenstand entscheidet, sondern Zweck, Nutzungsdauer und ob die Raten tragbar bleiben. Autos verlieren übrigens fast immer an Wert."}
+  ],
+  hilfen:["Fragt euch: Habe ich in fünf Jahren noch einen Nutzen davon, oder ist es dann verbraucht bzw. aus der Mode?","Nur drei Kreditziele helfen eindeutig beim Einkommen oder schaffen bleibenden Wert.","Investition: Weiterbildung, Wohneigentum, Gründung. Bei Jan sind drei Gründe richtig, zwei sind Mythen."]},
+
+{ titel:"Die Ratenfalle", kurz:"Rechnen statt glauben", buchstabe:"G",
+  material:`<h4>📄 Material: Klingt günstig …</h4>
+  <p><b>Angebot A – Tablet:</b> im Laden 300 €, oder „nur 15,50 € im Monat“ für 24 Monate.</p>
+  <p><b>Angebot B – „1-Euro-Handy“:</b> Das Smartphone kostet im Laden 240 €. Mit Vertrag zahlst du für das Gerät nur 1 €, dazu aber 24 Monate lang 25 € Grundgebühr.</p>
+  <p><b>Angebot C – Urlaubskredit:</b> „Ihr günstiger Weg zum Traumurlaub: 10.500 € ab 249 € monatlich.“</p>
+  <p class="hinweis">Angebote A und B nach: Sparkassen-Schulservice, Arbeitsblatt 1; Angebot C aus dem Fallbeispiel Lukas</p>`,
+  aufgaben:[
+   {typ:"num", frage:"Angebot A: Rechnet nach.", felder:[["Gesamtpreis bei Ratenzahlung",372,0],["Mehrkosten gegenüber dem Ladenpreis",72,0],["Das sind wie viel Prozent mehr?",24,0.5]], einheit:["€","€","%"],
+    erkl:"15,50 € × 24 = 372 €. Das sind 72 € oder 24 % mehr als der Ladenpreis. Die kleine Monatsrate verdeckt den hohen Gesamtpreis."},
+   {typ:"num", frage:"Angebot B: Was zahlst du in 24 Monaten insgesamt?", felder:[["Gesamtkosten",601,0]], einheit:"€",
+    erkl:"1 € + 24 × 25 € = 601 €. Das Handy ist nicht geschenkt, es wird über die Grundgebühr mitbezahlt. Zum Vergleich: Gerät 240 € plus ein günstiger SIM-only-Tarif."},
+   {typ:"num", frage:"Angebot C: Wie viele Monate dauert es mindestens, 10.500 € mit 249 € im Monat abzuzahlen (ohne Zinsen, aufgerundet)?", felder:[["Monate",43,0]], einheit:"Monate",
+    erkl:"10.500 € : 249 € = 42,2, also mindestens 43 Monate, mehr als dreieinhalb Jahre. Mit Zinsen dauert es noch länger. Der Urlaub ist längst vorbei, die Rate läuft weiter."},
+   {typ:"mc", multi:false, frage:"Was ist der wichtigste Trick hinter solchen Angeboten?",
+    opts:[["Sie lenken den Blick auf die kleine Monatsrate statt auf den Gesamtpreis.",1],["Sie sind immer zinslos.",0],["Ratenkäufe sind gesetzlich verboten für unter 25-Jährige.",0]],
+    erkl:"Verhaltensökonomisch gesagt: Die kleine Zahl wirkt als Anker. Deshalb immer rechnen: Rate × Laufzeit = Gesamtpreis."}
+  ],
+  hilfen:["Formel: Monatsrate × Anzahl der Monate = Gesamtpreis.","Mehrkosten = Gesamtpreis − Ladenpreis. Prozent = Mehrkosten : Ladenpreis × 100.","Angebot A: 15,50 × 24 = 372. Angebot C: 10.500 : 249 ≈ 42,2, also aufrunden."]},
+
+{ titel:"Lukas' Weg", kurz:"Fallanalyse Überschuldung", buchstabe:"E",
+  material:`<h4>📄 Material: Wie Lukas in die Schuldenfalle geriet</h4>
+  <div class="stationen">
+   <div class="station"><b>1 · Eigenes Leben</b><br>Erste eigene Wohnung, Miete, Strom, Internet. „Ganz schön teuer, aber egal, ich hab ja einen Job!“ Netto: 1.500 €.</div>
+   <div class="station"><b>2 · Gönn ich mir!</b><br>Online gekauft mit „Später zahlen“: Sneaker 189 €, Smartphone 1.119 €, Kopfhörer 329 €.</div>
+   <div class="station"><b>3 · Neue Möbel</b><br>Das Sofa gibt es mit „0 % Finanzierung“, also auch in Monatsraten.</div>
+   <div class="station"><b>4 · Traumurlaub</b><br>„Einmal im Leben einen Traum erfüllen!“ Urlaubskredit 10.500 €, ab 249 € im Monat.</div>
+   <div class="station"><b>5 · Wird schon!</b><br>„Am 1. gibt's ja wieder Geld.“ Daneben laufen Streaming, Lieferdienst und Fitnessstudio. Kontostand: −2.850 €, Dispo ausgeschöpft.</div>
+   <div class="station"><b>6 · Kassensturz</b><br>
+     <div class="auszug"><div><span>Einnahmen</span><span>1.500 €</span></div><div><span>Fixkosten</span><span class="minus">−1.370 €</span></div><div><span>Raten</span><span class="minus">−760 €</span></div><div><span>Offene Schulden</span><span class="minus">14.300 €</span></div></div>
+     Zahlungserinnerung, „Letzte Frist!!!“</div>
+  </div>
+  <p class="hinweis">Nacherzählt nach dem Comic „Lukas' Weg in die Überschuldung“, Sparkassen-Schulservice, Arbeitsblatt 2</p>`,
+  aufgaben:[
+   {typ:"mc", multi:true, frage:"An welchen Stationen nutzt Lukas „Später zahlen“ oder Ratenangebote? (mehrere richtig)",
+    opts:[["Station 1 – Wohnung",0],["Station 2 – Online-Shopping",1],["Station 3 – Möbel mit 0 % Finanzierung",1],["Station 4 – Urlaubskredit",1],["Station 5 – Abos",0]],
+    erkl:"Stationen 2–4. Abos (Station 5) sind laufende Verträge, und der Dispo ist ein Kredit, aber kein Ratenangebot."},
+   {typ:"num", frage:"Was bleibt Lukas nach Fixkosten und Raten jeden Monat zum Leben?", felder:[["Betrag",-630,0]], einheit:"€",
+    erkl:"1.500 € − 1.370 € − 760 € = −630 €. Schon vor dem ersten Einkauf im Supermarkt fehlen jeden Monat 630 €. Er ist überschuldet."},
+   {typ:"num", frage:"Sein Konto steht bei −2.850 €. Wie viel Dispozinsen kostet das pro Monat bei 10,99 % im Jahr?", felder:[["Zinsen pro Monat",26.10,0.15]], einheit:"€",
+    erkl:"2.850 € × 0,1099 : 12 ≈ 26,10 € pro Monat, also über 300 € im Jahr, nur dafür, im Minus zu sein."},
+   {typ:"sort", frage:"Ursache oder Folge der Überschuldung?", kat:["Ursache","Folge"],
+    items:[["viele Käufe mit „Später zahlen“",0],["Lebensstil passt nicht zum Einkommen",0],["kein Überblick über Raten und Abos",0],["einzelne Raten wirken klein",0],["Mahngebühren und Zinsen",1],["Dispo ausgeschöpft",1],["Briefe mit „letzter Frist“",1]],
+    erkl:"Die Ursachen liegen in Lukas' Entscheidungen und fehlendem Überblick. Die Folgen machen alles noch teurer: eine Spirale."}
+  ],
+  hilfen:["Sucht im Material nach Wörtern wie „später“, „Raten“, „Finanzierung“, „monatlich“.","Rest = Einnahmen − Fixkosten − Raten. Zinsen pro Monat = Betrag × Zinssatz : 12.","Station 2, 3 und 4. Der Rest ist negativ, ein dreistelliger Betrag. Die Zinsen liegen zwischen 25 und 27 €."]},
+
+{ titel:"Raus aus der Falle", kurz:"Prävention und Auswege", buchstabe:"T",
+  material:`<h4>📄 Material: Was der Schuldnerberater rät</h4>
+  <p>Das Wichtigste: nicht wegschauen. Zuerst verschafft man sich einen Überblick: Welche Rechnungen sind offen? Was kommt rein, was geht raus? Online-Käufe lassen sich oft innerhalb der Widerrufsfrist rückgängig machen. Bei größeren Schulden hilft eine Schuldnerberatung. In schweren Fällen gibt es die Privatinsolvenz: Über mehrere Jahre wird ein Teil des pfändbaren Einkommens abgegeben, danach ist ein schuldenfreier Neustart möglich.</p>
+  <p>Und: Offen über Geld sprechen. Wer früh nachfragt, verhindert oft größere Probleme, denn Schulden entstehen meistens schleichend.</p>
+  <p class="hinweis">Nach: Sparkassen-Schulservice, Arbeitsblatt 1 und Projektionsvorlage 3 (sinngemäß)</p>`,
+  aufgaben:[
+   {typ:"sort", frage:"Lukas hat Schuldenprobleme. Wie hilfreich ist welche Maßnahme?", kat:["hilfreich","problematisch","kommt drauf an"],
+    items:[["Überblick über alle Rechnungen verschaffen",0],["Briefe liegen lassen, bis sich alles von selbst regelt",1],["Eltern oder eine Vertrauensperson einbeziehen",0],["Verträge prüfen und, wenn möglich, widerrufen",0],["Schuldnerberatung kontaktieren",0],["Einen neuen Kredit aufnehmen, um alte Schulden zu bezahlen",1],["Freunde oder Verwandte um Geld bitten",2],["Privatinsolvenz beantragen",2]],
+    erkl:"Freunde um Geld bitten hilft schnell, kann aber Beziehungen belasten. Die Privatinsolvenz ist ein geordneter Weg, aber nur für schwere Fälle und mehrere Jahre lang belastend."},
+   {typ:"sort", frage:"Schulden vermeiden oder aus Schulden herauskommen?", kat:["vermeiden","herauskommen"],
+    items:[["einen Notgroschen zurücklegen",0],["Abos und Verträge regelmäßig prüfen",0],["größere Wünsche erst ansparen",0],["Preise vergleichen, gebraucht kaufen",0],["Kontakt mit den Gläubigern aufnehmen",1],["Raten realistisch neu planen",1],["keine neuen Schulden machen",1],["Hilfe bei der Schuldnerberatung holen",1]],
+    erkl:"Prävention wirkt, bevor Schulden entstehen. Auswege helfen, wenn sie schon da sind."},
+   {typ:"mc", multi:false, frage:"Was stimmt über die Privatinsolvenz?",
+    opts:[["Alle Schulden werden sofort gelöscht.",0],["Ein gerichtliches Verfahren: Über mehrere Jahre wird der pfändbare Teil des Einkommens abgegeben, danach ist ein Neustart möglich.",1],["Sie ist eine kostenlose Beratung bei der Bank.",0]],
+    erkl:"Die Privatinsolvenz ist der letzte Ausweg. Vorher lohnt sich fast immer eine Schuldnerberatung."}
+  ],
+  hilfen:["Fragt: Macht diese Maßnahme die Lage klarer und kleiner, oder verschiebt sie das Problem nur?","Zwei Maßnahmen sind klar problematisch, zwei haben Vor- und Nachteile.","Problematisch: Briefe liegen lassen, neuer Kredit. Kommt drauf an: Freunde fragen, Privatinsolvenz."]}
+];
+
+/* ======================== ZUSTAND ======================== */
+let Z = speicher.get("zustand") || {gestartet:false, start:null, strafe:0, geloest:[], aufgabenOk:{}, hilfen:{}, team:"", fertig:false, endzeit:null};
+function sichern(){ speicher.set("zustand",Z); }
+const DAUER=40*60;
+function restSek(){ if(!Z.start) return DAUER; const ende = Z.endzeit || Date.now(); return Math.round(DAUER - (ende-Z.start)/1000 - Z.strafe*60); }
+function uhr(){
+  const r=restSek(), a=Math.abs(r), t=`${r<0?"+":""}${String(Math.floor(a/60)).padStart(2,"0")}:${String(a%60).padStart(2,"0")}`;
+  $("#uhr").textContent=t; $("#uhr").style.color = r<0 ? "#F7A8A0" : r<300 ? "#F3C26B" : "#fff";
+  $("#uhr").title = r<0 ? "Zeit abgelaufen – ihr dürft weiterspielen" : "Verbleibende Zeit";
+}
+setInterval(uhr,1000);
+function codeAnzeige(){
+  $("#codeAnzeige").innerHTML = CODE.split("").map((b,i)=>`<b class="${Z.geloest.includes(i)?'ok':''}">${Z.geloest.includes(i)?b:"·"}</b>`).join("");
+}
+
+/* ======================== NAVIGATION ======================== */
+function zeigeScreen(id){ ["startScreen","spielScreen","tresorScreen","finaleScreen"].forEach(s=>$("#"+s).classList.toggle("versteckt",s!==id)); window.scrollTo({top:0,behavior:"smooth"}); }
+function kacheln(aktiv){
+  const frei = i => i===0 || Z.geloest.includes(i-1) || Z.geloest.includes(i);
+  let h = RAEUME.map((r,i)=>`<button class="raum-kachel ${Z.geloest.includes(i)?'geloest':''} ${!frei(i)?'gesperrt':''} ${aktiv===i?'aktiv':''}" data-r="${i}" ${!frei(i)?'disabled':''}>
+    <span class="status">${Z.geloest.includes(i)?"✅":frei(i)?"🔓":"🔒"}</span><span class="nr">Station ${i+1}</span><br><b>${r.titel}</b><br><small class="hinweis">${r.kurz}</small></button>`).join("");
+  const alle = Z.geloest.length===RAEUME.length;
+  h += `<button class="raum-kachel ${alle?'':'gesperrt'}" id="zumTresor" ${alle?'':'disabled'}><span class="status">${alle?"🔓":"🔒"}</span><span class="nr">Finale</span><br><b>Der Tresor</b><br><small class="hinweis">6 Buchstaben</small></button>`;
+  $("#raumKacheln").innerHTML=h;
+  $("#raumKacheln").querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>oeffneRaum(+b.dataset.r));
+  const zt=$("#zumTresor"); if(zt && alle) zt.onclick=()=>{ tresorAufbauen(); zeigeScreen("tresorScreen"); };
+}
+function ersterOffener(){ for(let i=0;i<RAEUME.length;i++) if(!Z.geloest.includes(i)) return i; return null; }
+
+/* ======================== RAUM ======================== */
+function oeffneRaum(i){
+  const R=RAEUME[i]; kacheln(i);
+  const genutzt = Z.hilfen[i]||0;
+  $("#raumInhalt").innerHTML = `<div class="karte">
+    <h2>Station ${i+1}: ${R.titel}</h2>
+    <div class="material">${R.material}</div>
+    <div id="aufgaben"></div>
+    <div class="hilfen"><button class="btn sek" id="hilfeBtn">${["💡 Denkanstoß","🧭 Strategie","🔑 Teillösung"][Math.min(genutzt,2)]} (+1 Min.)</button><span class="hinweis" id="hilfeInfo"></span></div>
+    <div id="hilfeTexte"></div>
+    <div id="raumErfolg"></div>
+  </div>`;
+  zeigeHilfen(i);
+  $("#hilfeBtn").onclick=()=>{ const n=Z.hilfen[i]||0; if(n>=3) return; Z.hilfen[i]=n+1; Z.strafe++; sichern(); zeigeHilfen(i); uhr(); };
+  const box=$("#aufgaben");
+  R.aufgaben.forEach((A,j)=>box.appendChild(baueAufgabe(i,j,A)));
+  pruefeRaum(i,false);
+  $("#raumInhalt").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function zeigeHilfen(i){
+  const n=Z.hilfen[i]||0, R=RAEUME[i];
+  $("#hilfeTexte").innerHTML = R.hilfen.slice(0,n).map((t,k)=>`<div class="hilfe-text"><b>${["💡 Denkanstoß","🧭 Strategie","🔑 Teillösung"][k]}:</b> ${t}</div>`).join("");
+  const b=$("#hilfeBtn"); if(n>=3){ b.disabled=true; b.textContent="Alle Tipps genutzt"; } else b.textContent=`${["💡 Denkanstoß","🧭 Strategie","🔑 Teillösung"][n]} (+1 Min.)`;
+  $("#hilfeInfo").textContent = n?`${n} von 3 Tipps genutzt`:"";
+}
+function key(i,j){ return i+"-"+j; }
+function baueAufgabe(i,j,A){
+  const el=document.createElement("div"); el.className="aufgabe"; const k=key(i,j), ok=Z.aufgabenOk[k];
+  let inner="";
+  if(A.typ==="sort"){
+    inner=`<div class="sortier">${A.items.map((it,n)=>`<div class="sort-zeile" data-n="${n}"><span>${it[0]}</span><span class="sort-btns">${A.kat.map((c,m)=>`<button data-m="${m}" aria-pressed="${ok&&it[1]===m}">${c}</button>`).join("")}</span></div>`).join("")}</div>`;
+  } else if(A.typ==="mc"){
+    inner=`<div class="mc">${A.opts.map((o,n)=>`<label><input type="${A.multi?'checkbox':'radio'}" name="mc${k}" value="${n}" ${ok&&o[1]?'checked':''}> <span>${o[0]}</span></label>`).join("")}</div>`;
+  } else if(A.typ==="num"){
+    const einh=n=>Array.isArray(A.einheit)?A.einheit[n]:A.einheit;
+    inner=A.felder.map((f,n)=>`<div class="num-zeile"><label style="min-width:280px">${f[0]}</label><input type="text" inputmode="decimal" data-n="${n}" value="${ok?String(f[1]).replace(".",","):""}"> ${einh(n)}</div>`).join("");
+  } else if(A.typ==="wahl"){
+    inner=A.felder.map((f,n)=>`<div class="num-zeile"><label style="min-width:200px">${f[0]}</label><select data-n="${n}"><option value="">– wählen –</option>${f[1].map((o,m)=>`<option value="${m}" ${ok&&m===f[2]?'selected':''}>${o}</option>`).join("")}</select></div>`).join("");
+  }
+  el.innerHTML=`<h4>Aufgabe ${j+1}: ${A.frage}<span class="ok">${ok?"✓ gelöst":""}</span></h4>${inner}
+   <div style="margin-top:8px"><button class="btn" data-pruef>Prüfen</button></div><div class="feedback ${ok?'r':''}">${ok?A.erkl:""}</div>`;
+  if(A.typ==="sort") el.querySelectorAll(".sort-zeile").forEach(z=>z.querySelectorAll("button").forEach(b=>b.onclick=()=>{ z.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b)); z.classList.remove("r","f"); }));
+  el.querySelector("[data-pruef]").onclick=()=>pruefe(i,j,A,el);
+  if(ok) el.classList.add("geloest");
+  return el;
+}
+function zahl(s){ if(s==null) return NaN; s=String(s).trim().replace(/\s|€|%/g,"").replace(/^−/,"-"); if(/,/.test(s)) s=s.replace(/\./g,"").replace(",","."); else if(/^\-?\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,""); return parseFloat(s); }
+function pruefe(i,j,A,el){
+  let richtig=true, fehler=0;
+  if(A.typ==="sort"){
+    el.querySelectorAll(".sort-zeile").forEach(z=>{ const n=+z.dataset.n, gew=[...z.querySelectorAll("button")].findIndex(b=>b.getAttribute("aria-pressed")==="true"); const r=gew===A.items[n][1]; z.classList.toggle("r",r); z.classList.toggle("f",!r); if(!r){richtig=false;fehler++;} });
+  } else if(A.typ==="mc"){
+    el.querySelectorAll(".mc label").forEach((l,n)=>{ const c=l.querySelector("input").checked, soll=!!A.opts[n][1]; l.classList.remove("r","f"); if(c&&soll) l.classList.add("r"); if(c!==soll){ if(c) l.classList.add("f"); richtig=false; fehler++; } });
+  } else if(A.typ==="num"){
+    el.querySelectorAll("input").forEach(inp=>{ const n=+inp.dataset.n, f=A.felder[n]; let v=zahl(inp.value); let r = !isNaN(v) && Math.abs(v-f[1])<=f[2]+1e-9; if(!r && (A.betrag || f[1]<0) && !isNaN(v) && Math.abs(Math.abs(v)-Math.abs(f[1]))<=f[2]+1e-9 && f[1]<0) r = true; inp.classList.toggle("r",r); inp.classList.toggle("f",!r); if(!r){richtig=false;fehler++;} });
+  } else if(A.typ==="wahl"){
+    el.querySelectorAll("select").forEach(s=>{ const n=+s.dataset.n, r=s.value!==""&&+s.value===A.felder[n][2]; s.style.borderColor=r?"var(--gruen)":"var(--rot)"; if(!r){richtig=false;fehler++;} });
+  }
+  const fb=el.querySelector(".feedback");
+  if(richtig){ fb.className="feedback r"; fb.innerHTML="<b>Richtig!</b> "+A.erkl; Z.aufgabenOk[key(i,j)]=true; el.querySelector("h4 .ok").textContent="✓ gelöst"; el.classList.add("geloest"); sichern(); pruefeRaum(i,true); }
+  else { fb.className="feedback f"; fb.innerHTML=`<b>Noch nicht ganz.</b> ${fehler===1?"Eine Angabe stimmt":"Einige Angaben stimmen"} noch nicht, die markierten Felder sind rot. Lest im Material nach oder holt euch einen Tipp.`; }
+}
+function pruefeRaum(i,frisch){
+  const R=RAEUME[i], alle=R.aufgaben.every((_,j)=>Z.aufgabenOk[key(i,j)]);
+  if(!alle) return;
+  if(!Z.geloest.includes(i)){ Z.geloest.push(i); sichern(); }
+  const hb=$("#hilfeBtn"); if(hb){ hb.disabled=true; hb.textContent="Station gelöst – keine Tipps mehr nötig"; }
+  codeAnzeige(); kacheln(i);
+  const naechster=ersterOffener();
+  $("#raumErfolg").innerHTML=`<div class="karte" style="text-align:center;background:var(--gruen-hell);margin-top:16px">
+    <h3>Station gelöst! Euer Code-Buchstabe:</h3><div class="buchstabe-gross">${R.buchstabe}</div>
+    <p class="hinweis">Merkt ihn euch: Buchstabe ${i+1} von 6.</p>
+    ${naechster!==null?`<button class="btn akz" id="weiterRaum">Weiter zu Station ${naechster+1}</button>`:`<button class="btn akz" id="weiterTresor">Zum Tresor</button>`}</div>`;
+  if(naechster!==null) $("#weiterRaum").onclick=()=>oeffneRaum(naechster);
+  else $("#weiterTresor").onclick=()=>{ tresorAufbauen(); zeigeScreen("tresorScreen"); };
+  if(frisch) $("#raumErfolg").scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+/* ======================== TRESOR + FINALE ======================== */
+function tresorAufbauen(){
+  $("#tresorFelder").innerHTML = CODE.split("").map((_,i)=>`<input maxlength="1" data-i="${i}" aria-label="Buchstabe ${i+1}">`).join("");
+  const ins=[...$("#tresorFelder").querySelectorAll("input")];
+  ins.forEach((inp,i)=>inp.addEventListener("input",()=>{ if(inp.value && ins[i+1]) ins[i+1].focus(); }));
+  ins[0].focus();
+}
+$("#tresorBtn").onclick=()=>{
+  const w=[...$("#tresorFelder").querySelectorAll("input")].map(i=>i.value.toUpperCase()).join("");
+  const fb=$("#tresorFb");
+  if(w===CODE){ if(!Z.fertig){ Z.fertig=true; Z.endzeit=Date.now(); sichern(); } finale(); }
+  else { fb.className="feedback f"; fb.textContent="Der Tresor bleibt zu. Prüft die Reihenfolge: Station 1 bis 6. Oben in der Leiste seht ihr eure Buchstaben."; }
+};
+const PLAN=[["Alle Briefe öffnen und eine Liste aller Gläubiger, Beträge und Fristen anlegen",1],["Einen Termin bei einer kostenlosen Schuldnerberatung vereinbaren",1],["Abos und Lieferdienst kündigen, Fitnessstudio pausieren",1],["Keine neuen Käufe mit „Später zahlen“, Funktion in den Shops deaktivieren",1],["Einen neuen Kredit aufnehmen, um alles auf einmal zu bezahlen",0],["Die Briefe ignorieren, bis das Gehalt kommt",0],["Erst einmal einen Kurzurlaub machen, um abzuschalten",0],["Mit einem Online-Anbieter „Sofort schuldenfrei“ gegen Gebühr zusammenarbeiten",0]];
+function finale(){
+  zeigeScreen("finaleScreen");
+  $("#planListe").innerHTML = PLAN.map((p,n)=>`<label><input type="checkbox" value="${n}"> <span>${p[0]}</span></label>`).join("");
+  $("#planBtn").onclick=()=>{
+    let r=true, anzahl=0; $("#planListe").querySelectorAll("label").forEach((l,n)=>{ const c=l.querySelector("input").checked; if(c) anzahl++; l.classList.remove("r","f"); if(c&&PLAN[n][1]) l.classList.add("r"); if(c&&!PLAN[n][1]){l.classList.add("f"); r=false;} if(!c&&PLAN[n][1]) r=false; });
+    const fb=$("#planFb");
+    if(r){ fb.className="feedback r"; fb.innerHTML="<b>Starker Plan!</b> Überblick verschaffen, Hilfe holen, laufende Kosten senken, keine neuen Schulden: Genau so beginnen Schuldnerberatungen. Danach werden mit den Gläubigern Raten vereinbart. Wenn das nicht reicht, kommt eine Privatinsolvenz in Frage."; zertifikat(); }
+    else fb.className="feedback f", fb.innerHTML = anzahl!==4 ? "Wählt genau vier Schritte aus." : "Einer eurer Schritte verschlimmert die Lage oder kostet unnötig Geld. Welcher? (Tipp: unseriöse Gebühren, neue Kredite und Wegschauen.)";
+  };
+  ["hook","botschaft"].forEach(id=>{ const v=speicher.get(id); if(v) $("#"+id).value=v; $("#"+id).oninput=e=>speicher.set(id,e.target.value); });
+  zertifikat(false);
+}
+function zertifikat(planOk=true){
+  const genutzt=Object.values(Z.hilfen).reduce((a,b)=>a+b,0);
+  const dauer = Z.endzeit&&Z.start ? Math.round((Z.endzeit-Z.start)/60000) : null;
+  const rest = restSek();
+  $("#zertifikat").innerHTML=`<div style="font-size:2.2rem">🏅</div><h2>Ausbruch geschafft!</h2>
+    <p><b>${(Z.team||"Euer Team").replace(/[<>]/g,"")}</b> hat die Akte geöffnet und Lukas einen Weg aus der Schuldenfalle gezeigt.</p>
+    <p>Spielzeit: <b>${dauer!==null?dauer+" Min.":"–"}</b> · Tipps genutzt: <b>${genutzt}</b> (+${genutzt} Min.) · ${rest>=0?`Restzeit: <b>${Math.floor(rest/60)} Min.</b>`:"Zeit leicht überzogen, aber geschafft!"}</p>
+    <p class="hinweis">Zeigt diese Seite eurer Lehrkraft. Merksatz für den Hefteintrag: <i>Rate × Laufzeit = Gesamtpreis. Wer den Überblick behält und früh Hilfe holt, bleibt Herr über sein Geld.</i></p>`;
+}
+
+/* ======================== START ======================== */
+$("#losBtn").onclick=()=>{
+  Z.team=$("#teamName").value.trim(); if(!Z.gestartet){ Z.gestartet=true; Z.start=Date.now(); } sichern();
+  zeigeScreen("spielScreen"); kacheln(); oeffneRaum(ersterOffener() ?? 0);
+};
+$("#resetBtn").onclick=()=>{ $("#resetBtn").textContent="Wirklich alles löschen? Nochmal klicken"; $("#resetBtn").onclick=()=>{ speicher.weg(); location.reload(); }; };
+$("#glossarBtn").onclick=()=>$("#glossar").showModal();
+if(Z.team) $("#teamName").value=Z.team;
+if(Z.gestartet) $("#losBtn").textContent="Weiterspielen";
+codeAnzeige(); uhr();
+if(Z.fertig){ finale(); }
+</script>
+</body>
+</html>
